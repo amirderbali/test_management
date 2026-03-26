@@ -1,0 +1,66 @@
+<odoo>
+
+    <!-- TREE -->
+    <record id="view_test_run_tree" model="ir.ui.view">
+        <field name="name">test.run.list</field>
+        <field name="model">test.run</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="test_case_id"/>
+                <field name="tester_id"/>
+                <field name="state"/>
+                <field name="result"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- FORM -->
+    <record id="view_test_run_form" model="ir.ui.view">
+        <field name="name">test.run.form</field>
+        <field name="model">test.run</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_start" string="Démarrer" type="object" invisible="state != 'draft'"/>
+                    <button name="action_done" string="Terminer" type="object" invisible="state != 'running'"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                        <field name="test_case_id"/>
+                        <field name="tester_id"/>
+                        <field name="date"/>
+                        <field name="result"/>
+                    </group>
+
+                    <notebook>
+                        <page string="Étapes">
+                            <field name="step_ids">
+                                <list editable="bottom">
+                                    <field name="description"/>
+                                    <field name="expected_result"/>
+                                    <field name="actual_result"/>
+                                    <field name="state"/>
+                                    <field name="bug_id"/>
+
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+
+    <!-- Action pour ouvrir Test Run -->
+    <record id="action_test_run" model="ir.actions.act_window">
+        <field name="name">Test Run</field>
+        <field name="res_model">test.run</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+</odoo>

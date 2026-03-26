@@ -1,0 +1,100 @@
+<odoo>
+
+    <!-- LIST VIEW -->
+    <record id="view_test_bug_list" model="ir.ui.view">
+        <field name="name">test.bug.list</field>
+        <field name="model">test.bug</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="severity"/>
+                <field name="state" widget="badge" decoration-success="state == 'resolved'"  decoration-warning="state == 'in_progress'" decoration-danger="state == 'new'" decoration-muted="state == 'closed'"/>
+                <field name="tester_id"/>
+                <field name="test_run_id"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- FORM VIEW -->
+    <record id="view_test_bug_form" model="ir.ui.view">
+        <field name="name">test.bug.form</field>
+        <field name="model">test.bug</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_confirm" type="object" string="Confirmer" class="btn-primary" invisible="state != 'new'" />
+                    <button name="action_start" type="object" string="En cours" class="btn-primary" invisible="state != 'confirmed'" />
+                    <button name="action_resolve" type="object" string="Résolu" class="btn-success" invisible="state != 'in_progress'"  />
+                    <button name="action_close" type="object" string="Fermer" class="btn-secondary" invisible="state != 'resolved'"  />
+                    <button name="action_reset" type="object" string="Réinitialiser" class="btn-primary" invisible="state != 'closed'"   />
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="new,confirmed,in_progress,resolved,closed"/>
+                </header>
+
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                        <field name="severity"/>
+                        <field name="tester_id"/>
+                        <field name="project_id"/>
+                    </group>
+
+                    <group>
+                        <field name="test_run_id"/>
+                        <field name="step_id"/>
+                    </group>
+
+                    <notebook>
+                        <page string="Description">
+                            <field name="description"/>
+                        </page>
+                    </notebook>
+                </sheet>
+
+                <chatter/>
+            </form>
+        </field>
+    </record>
+    <record id="action_test_bug" model="ir.actions.act_window">
+    <field name="name">Bugs</field>
+    <field name="res_model">test.bug</field>
+    <field name="view_mode">list,form</field>
+    </record>
+
+    
+
+    <!-- GRAPH VIEW - Bugs -->
+    <record id="view_test_bug_graph" model="ir.ui.view">
+        <field name="name">test.bug.graph</field>
+        <field name="model">test.bug</field>
+        <field name="arch" type="xml">
+            <graph string="Statistiques Bugs" type="bar">
+                <field name="state" type="row"/>
+                <field name="severity" type="col"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- PIVOT VIEW - Bugs -->
+    <record id="view_test_bug_pivot" model="ir.ui.view">
+        <field name="name">test.bug.pivot</field>
+        <field name="model">test.bug</field>
+        <field name="arch" type="xml">
+            <pivot string="Analyse Bugs">
+                <field name="project_id" type="row"/>
+                <field name="state" type="col"/>
+                <field name="severity" type="col"/>
+            </pivot>
+        </field>
+    </record>
+
+    <!-- ACTION - Bugs -->
+    <record id="action_test_bug" model="ir.actions.act_window">
+        <field name="name">Bugs</field>
+        <field name="res_model">test.bug</field>
+        <field name="view_mode">list,form,graph,pivot</field>
+    </record>
+
+
+
+</odoo>

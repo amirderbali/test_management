@@ -1,0 +1,6 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_test_case_user,test.case user,model_test_case,base.group_user,1,1,1,1
+access_test_case_step_user,test.case.step user,model_test_case_step,base.group_user,1,1,1,1
+access_test_run,test.run,model_test_run,,1,1,1,1
+access_test_run_step,test.run.step,model_test_run_step,,1,1,1,1
+access_test_bug,test.bug,model_test_bug,,1,1,1,1

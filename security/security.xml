@@ -1,0 +1,28 @@
+<odoo>
+
+
+    <!-- Groupe Testeur -->
+    <record id="group_testeur" model="res.groups">
+        <field name="name">Testeur</field>
+        <field name="sequence">10</field>
+        <field name="privilege_id" ref="res_groups_privilege_test_management"/>
+        <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+    </record>
+
+    <!-- Groupe Responsable QA -->
+    <record id="group_qa_manager" model="res.groups">
+        <field name="name">Responsable QA</field>
+        <field name="sequence">20</field>
+        <field name="privilege_id" ref="res_groups_privilege_test_management"/>
+        <field name="implied_ids" eval="[(4, ref('test_management.group_testeur'))]"/>
+    </record>
+
+    <!-- Groupe Administrateur Test -->
+    <record id="group_test_admin" model="res.groups">
+        <field name="name">Administrateur Test</field>
+        <field name="sequence">30</field>
+        <field name="privilege_id" ref="res_groups_privilege_test_management"/>
+        <field name="implied_ids" eval="[(4, ref('test_management.group_qa_manager'))]"/>
+        <field name="user_ids" eval="[(4, ref('base.user_root')), (4, ref('base.user_admin'))]"/>
+    </record>
+</odoo>
