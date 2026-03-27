@@ -26,18 +26,7 @@ class TestRun(models.Model):
 
     step_ids = fields.One2many('test.run.step','test_run_id',string="Étapes exécutées")
     
-    bug_id = fields.Many2one('test.bug',string="Bug")
-
-    def create_bug(self):
-     for step in self:
-        if step.result == 'fail' and not step.bug_id:
-            bug = self.env['test.bug'].create({
-                'name': 'Bug - ' + (step.description or ''),
-                'test_run_id': step.test_run_id.id,
-                'description': step.actual_result,
-            })
-            step.bug_id = bug.id
-
+    
     # bouton démarrer
     def action_start(self):
         self.state = 'running'

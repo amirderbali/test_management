@@ -1,6 +1,15 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-access_test_case_user,test.case user,model_test_case,base.group_user,1,1,1,1
-access_test_case_step_user,test.case.step user,model_test_case_step,base.group_user,1,1,1,1
-access_test_run,test.run,model_test_run,,1,1,1,1
-access_test_run_step,test.run.step,model_test_run_step,,1,1,1,1
-access_test_bug,test.bug,model_test_bug,,1,1,1,1
+access_test_case_user,test.case user,model_test_case,test_management.group_testeur,1,1,1,0
+access_test_case_manager,test.case manager,model_test_case,test_management.group_qa_manager,1,1,1,0
+access_test_case_admin,test.case admin,model_test_case,test_management.group_test_admin,1,1,1,1
+
+access_test_run_user,test.run user,model_test_run,test_management.group_testeur,1,1,1,0
+access_test_run_manager,test.run manager,model_test_run,test_management.group_qa_manager,1,1,1,1
+
+access_test_run_step_user,test.run.step user,model_test_run_step,test_management.group_testeur,1,1,1,0
+
+
+
+
+access_test_bug_user,test.bug user,model_test_bug,test_management.group_testeur,1,1,1,0
+access_test_bug_manager,test.bug manager,model_test_bug,test_management.group_qa_manager,1,1,1,1
