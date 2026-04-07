@@ -5,12 +5,13 @@
         <field name="name">test.run.list</field>
         <field name="model">test.run</field>
         <field name="arch" type="xml">
-            <list>
+            <list default_group_by="test_case_id">
                 <field name="name"/>
                 <field name="test_case_id"/>
                 <field name="tester_id"/>
                 <field name="state"/>
                 <field name="result"/>
+                <field name="project_id"/>
             </list>
         </field>
     </record>

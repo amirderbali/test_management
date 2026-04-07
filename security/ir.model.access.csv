@@ -7,6 +7,9 @@ access_test_run_user,test.run user,model_test_run,test_management.group_testeur,
 access_test_run_manager,test.run manager,model_test_run,test_management.group_qa_manager,1,1,1,1
 
 access_test_run_step_user,test.run.step user,model_test_run_step,test_management.group_testeur,1,1,1,0
+access_test_case_step_user,test.case.step.user,model_test_case_step,,1,1,1,1
+
+access_test_report_wizard,test.report.wizard,model_test_report_wizard,base.group_user,1,1,1,1
 
 
 

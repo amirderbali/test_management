@@ -5,7 +5,7 @@
         <field name="name">test.case.tree</field>
         <field name="model">test.case</field>
         <field name="arch" type="xml">
-            <list>
+            <list default_group_by="project_id">
                 <field name="name"/>
                 <field name="project_id"/>
                 <field name="tache_id"/>

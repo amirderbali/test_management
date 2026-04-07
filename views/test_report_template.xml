@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <template id="report_test_global_template">
+    <t t-call="web.html_container">
+      <t t-call="web.external_layout">
+        <div class="page">
+
+          <!-- EN-TÊTE -->
+          <div class="text-center" style="margin-bottom:20px;">
+            <h2>Rapport du Projet : <t t-esc="project.name"/></h2>
+            <p class="text-muted">Généré le : <t t-esc="now"/></p>
+          </div>
+          <hr/>
+
+          <!-- RÉSUMÉ -->
+          <h4>Résumé Global</h4>
+          <table class="table table-bordered" style="width:65%;">
+            <thead style="background-color:#6c5ce7;color:white;">
+              <tr>
+                <th>Élément</th>
+                <th>Total</th>
+                <th>Passé / Résolu</th>
+                <th>Échoué / Nouveau</th>
+                <th>Bloqué / En cours</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Cas de Test</strong></td>
+                <td><t t-esc="len(test_cases)"/></td>
+                <td>—</td><td>—</td><td>—</td>
+              </tr>
+              <tr>
+                <td><strong>Test Runs</strong></td>
+                <td><t t-esc="len(test_runs)"/></td>
+                <td style="color:green;">
+                  <t t-esc="len(test_runs.filtered(lambda r: r.result == 'pass'))"/>
+                </td>
+                <td style="color:red;">
+                  <t t-esc="len(test_runs.filtered(lambda r: r.result == 'fail'))"/>
+                </td>
+                <td style="color:orange;">
+                  <t t-esc="len(test_runs.filtered(lambda r: r.result == 'blocked'))"/>
+                </td>
+              </tr>
+              <tr>
+                <td><strong>Bugs</strong></td>
+                <td><t t-esc="len(bugs)"/></td>
+                <td style="color:green;">
+                  <t t-esc="len(bugs.filtered(lambda b: b.state in ('resolved','closed')))"/>
+                </td>
+                <td style="color:red;">
+                  <t t-esc="len(bugs.filtered(lambda b: b.state in ('new','confirmed')))"/>
+                </td>
+                <td style="color:orange;">
+                  <t t-esc="len(bugs.filtered(lambda b: b.state == 'in_progress'))"/>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <!-- CAS DE TEST -->
+          <br/>
+          <h4>Cas de Test (<t t-esc="len(test_cases)"/>)</h4>
+          <t t-if="not test_cases">
+            <p class="text-muted">Aucun cas de test trouvé pour ce projet.</p>
+          </t>
+          <t t-if="test_cases">
+            <table class="table table-sm table-bordered table-striped">
+              <thead style="background-color:#0984e3;color:white;">
+                <tr>
+                  <th>#</th>
+                  <th>Nom</th>
+                  <th>Étapes</th>
+                  <th>Runs associés</th>
+                </tr>
+              </thead>
+              <tbody>
+                <t t-foreach="test_cases" t-as="tc">
+                  <tr>
+                    <td><t t-esc="tc_index + 1"/></td>
+                    <td><t t-esc="tc.name"/></td>
+                    <td><t t-esc="len(tc.step_ids)"/></td>
+                    <td>
+                      <t t-esc="len(test_runs.filtered(lambda r: r.test_case_id.id == tc.id))"/>
+                    </td>
+                  </tr>
+                </t>
+              </tbody>
+            </table>
+          </t>
+
+          <!-- TEST RUNS -->
+          <br/>
+          <h4>Test Runs (<t t-esc="len(test_runs)"/>)</h4>
+          <t t-if="not test_runs">
+            <p class="text-muted">Aucun test run trouvé pour ce projet.</p>
+          </t>
+          <t t-if="test_runs">
+            <table class="table table-sm table-bordered table-striped">
+              <thead style="background-color:#fdcb6e;">
+                <tr>
+                  <th>#</th>
+                  <th>Nom</th>
+                  <th>Cas de Test</th>
+                  <th>Testeur</th>
+                  <th>Date</th>
+                  <th>État</th>
+                  <th>Résultat</th>
+                </tr>
+              </thead>
+              <tbody>
+                <t t-foreach="test_runs" t-as="run">
+                  <tr>
+                    <td><t t-esc="run_index + 1"/></td>
+                    <td><t t-esc="run.name"/></td>
+                    <td><t t-esc="run.test_case_id.name"/></td>
+                    <td><t t-esc="run.tester_id.name"/></td>
+                    <td><t t-esc="run.date and run.date.strftime('%d/%m/%Y') or '—'"/></td>
+                    <td>
+                      <t t-if="run.state == 'draft'">Brouillon</t>
+                      <t t-if="run.state == 'running'">En cours</t>
+                      <t t-if="run.state == 'done'">Terminé</t>
+                    </td>
+                    <td>
+                      <span t-if="run.result == 'pass'"
+                            style="color:green;font-weight:bold;">✓ Passé</span>
+                      <span t-if="run.result == 'fail'"
+                            style="color:red;font-weight:bold;">✗ Échoué</span>
+                      <span t-if="run.result == 'blocked'"
+                            style="color:orange;font-weight:bold;">⊘ Bloqué</span>
+                      <span t-if="not run.result">—</span>
+                    </td>
+                  </tr>
+                </t>
+              </tbody>
+            </table>
+          </t>
+
+          <!-- BUGS -->
+          <br/>
+          <h4>Bugs (<t t-esc="len(bugs)"/>)</h4>
+          <t t-if="not bugs">
+            <p class="text-muted">Aucun bug trouvé pour ce projet.</p>
+          </t>
+          <t t-if="bugs">
+            <table class="table table-sm table-bordered table-striped">
+              <thead style="background-color:#d63031;color:white;">
+                <tr>
+                  <th>#</th>
+                  <th>Titre</th>
+                  <th>Test Run lié</th>
+                  <th>Sévérité</th>
+                  <th>Statut</th>
+                  <th>Testeur</th>
+                </tr>
+              </thead>
+              <tbody>
+                <t t-foreach="bugs" t-as="bug">
+                  <tr>
+                    <td><t t-esc="bug_index + 1"/></td>
+                    <td><t t-esc="bug.name"/></td>
+                    <td><t t-esc="bug.test_run_id.name or '—'"/></td>
+                    <td>
+                      <span t-if="bug.severity == 'low'"
+                            style="color:green;">Faible</span>
+                      <span t-if="bug.severity == 'medium'"
+                            style="color:orange;">Moyen</span>
+                      <span t-if="bug.severity == 'high'"
+                            style="color:red;font-weight:bold;">Élevé</span>
+                    </td>
+                    <td>
+                      <t t-if="bug.state == 'new'">Nouveau</t>
+                      <t t-if="bug.state == 'confirmed'">Confirmé</t>
+                      <t t-if="bug.state == 'in_progress'">En cours</t>
+                      <t t-if="bug.state == 'resolved'">Résolu</t>
+                      <t t-if="bug.state == 'closed'">Fermé</t>
+                    </td>
+                    <td><t t-esc="bug.tester_id.name"/></td>
+                  </tr>
+                </t>
+              </tbody>
+            </table>
+          </t>
+
+        </div>
+      </t>
+    </t>
+  </template>
+</odoo>

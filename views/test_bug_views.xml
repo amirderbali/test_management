@@ -5,7 +5,7 @@
         <field name="name">test.bug.list</field>
         <field name="model">test.bug</field>
         <field name="arch" type="xml">
-            <list>
+            <list default_group_by="test_run_id">
                 <field name="name"/>
                 <field name="severity"/>
                 <field name="state" widget="badge" decoration-success="state == 'resolved'"  decoration-warning="state == 'in_progress'" decoration-danger="state == 'new'" decoration-muted="state == 'closed'"/>

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <!-- Action rapport PDF -->
+  <record id="action_report_test_global" model="ir.actions.report">
+    <field name="name">Rapport du Projet</field>
+    <field name="model">test.report.wizard</field>
+    <field name="report_type">qweb-pdf</field>
+    <field name="report_name">test_management.report_test_global_template</field>
+    <field name="report_file">test_management.report_test_global_template</field>
+  </record>
+
+  <!-- Vue wizard avec champ projet -->
+  <record id="view_test_report_wizard_form" model="ir.ui.view">
+    <field name="name">test.report.wizard.form</field>
+    <field name="model">test.report.wizard</field>
+    <field name="arch" type="xml">
+      <form string="Générer le Rapport par Projet">
+        <group string="Projet">
+          <field name="project_id"/>   <!-- ← champ obligatoire -->
+        </group>
+        <group string="Filtrer par période (optionnel)">
+          <field name="date_debut"/>
+          <field name="date_fin"/>
+        </group>
+        <footer>
+          <button name="action_generate_report"
+                  string="Télécharger le Rapport PDF"
+                  type="object"
+                  class="btn-primary"/>
+          <button string="Annuler" class="btn-secondary" special="cancel"/>
+        </footer>
+      </form>
+    </field>
+  </record>
+
+  <!-- Action fenêtre wizard -->
+  <record id="action_test_report_wizard" model="ir.actions.act_window">
+    <field name="name">Rapport par projet</field>
+    <field name="res_model">test.report.wizard</field>
+    <field name="view_mode">form</field>
+    <field name="target">new</field>
+  </record>
+
+  <!-- Menu -->
+  <menuitem id="menu_test_rapport"
+            name="Rapport par projet"
+            parent="menu_test_management_root"
+            action="action_test_report_wizard"
+            sequence="99"/>
+</odoo>
