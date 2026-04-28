@@ -17,7 +17,7 @@ class TestRunStep(models.Model) :
     bug_id = fields.Many2one('test.bug',string="Bug")
     
     
-    def write(self, vals):
+    def create(self, vals):
      result = super().write(vals)
      if 'state' in vals and vals['state'] == 'fail':
         for step in self:
