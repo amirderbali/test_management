@@ -16,18 +16,19 @@ class TestRunStep(models.Model) :
     
     bug_id = fields.Many2one('test.bug',string="Bug")
     
-    
-    def create(self, vals):
-     result = super().write(vals)
-     if 'state' in vals and vals['state'] == 'fail':
-        for step in self:
-            if not step.bug_id:
-                bug = self.env['test.bug'].create({
-                    'name': 'Bug - ' + (step.test_run_id.name or ''),
+    @api.model_create_multi
+    def create(self, vals_list):
+        # Création normale des étapes
+        steps = super(TestRunStep, self).create(vals_list)
+        
+        for step in steps:
+            # Si l'étape est en échec, on crée le bug automatiquement
+            if step.state == 'fail':
+                self.env['test.bug'].create({
+                    'name': f"Bug - {step.test_run_id.name or 'Sans nom'}",
                     'project_id': step.test_run_id.project_id.id,
                     'test_run_id': step.test_run_id.id,
-                    'description': step.actual_result,
+                    'description': f"Échec de l'étape : {step.description}\nRésultat réel : {step.actual_result}",
                 })
-                step.bug_id = bug.id
-        return result
+        return steps
 
