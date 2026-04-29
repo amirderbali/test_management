@@ -1,64 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-    <!-- Tree View -->
-    <record id="view_test_case_tree" model="ir.ui.view">
-        <field name="name">test.case.tree</field>
+    <record id="view_test_case_search" model="ir.ui.view">
+        <field name="name">test.case.search</field>
         <field name="model">test.case</field>
         <field name="arch" type="xml">
-            <list default_group_by="project_id">
+            <search>
                 <field name="name"/>
                 <field name="project_id"/>
                 <field name="tache_id"/>
                 <field name="user_id"/>
-                <field name="state"/>
+                <separator/>
+                <filter string="Brouillon" name="draft" domain="[('state', '=', 'draft')]"/>
+                <filter string="En cours" name="in_progress" domain="[('state', '=', 'in_progress')]"/>
+                <filter string="Terminé" name="done" domain="[('state', '=', 'done')]"/>
+                <separator/>
+                <group>
+                    <filter string="Projet" name="group_by_project" context="{'group_by': 'project_id'}"/>
+                    <filter string="Tâche" name="group_by_task" context="{'group_by': 'tache_id'}"/>
+                    <filter string="Responsable" name="group_by_user" context="{'group_by': 'user_id'}"/>
+                    <filter string="État" name="group_by_state" context="{'group_by': 'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
 
+    <record id="view_test_case_tree" model="ir.ui.view">
+        <field name="name">test.case.tree</field>
+        <field name="model">test.case</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="project_id"/>
+                <field name="tache_id"/>
+                <field name="user_id"/>
+                <field name="state" widget="badge"
+                       decoration-info="state == 'draft'"
+                       decoration-warning="state == 'in_progress'"
+                       decoration-success="state == 'done'"/>
             </list>
         </field>
     </record>
 
-    <!-- Form View -->
     <record id="view_test_case_form" model="ir.ui.view">
         <field name="name">test.case.form</field>
         <field name="model">test.case</field>
         <field name="arch" type="xml">
             <form>
                 <header>
-                    <!-- Boutons simplifiés pour Odoo 17 -->
-                    <button name="action_approve" type="object"
-                            string="Approuver"
-                            class="btn-primary"/>
-                    <button name="action_start" type="object"
-                            string="Démarrer"
-                            class="btn-primary"/>
-                    <button name="action_done" type="object"
-                            string="Terminer"
-                            class="btn-success"/>
-                    <button name="action_reset" type="object"
-                            string="Réinitialiser"
-                            class="btn-secondary"/>
-
+                    <button name="action_approve" type="object" string="Approuver"
+                            class="btn-primary" invisible="state != 'draft'"/>
+                    <button name="action_start" type="object" string="Démarrer"
+                            class="btn-primary" invisible="state != 'approved'"/>
+                    <button name="action_done" type="object" string="Terminer"
+                            class="btn-success" invisible="state != 'in_progress'"/>
+                    <button name="action_reset" type="object" string="Réinitialiser"
+                            class="btn-secondary" invisible="state == 'draft'"/>
                     <field name="state" widget="statusbar"
                            statusbar_visible="draft,approved,in_progress,done"/>
                 </header>
-
                 <sheet>
-                    <group>
-                        <field name="name"/>
-                        <field name="project_id"/>
-                        <field name="tache_id"/>
-                        <field name="user_id"/>
-                        
-                    </group>
 
+                    <!-- ✅ BOUTONS DE NAVIGATION -->
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_open_project"
+                                type="object"
+                                class="oe_stat_button"
+                                icon="fa-folder-open"
+                                invisible="not project_id">
+                            <div class="o_stat_info">
+                                <span class="o_stat_text">Projet</span>
+                            </div>
+                        </button>
+                        <button name="action_open_task"
+                                type="object"
+                                class="oe_stat_button"
+                                icon="fa-tasks"
+                                invisible="not tache_id">
+                            <div class="o_stat_info">
+                                <span class="o_stat_text">Tâche</span>
+                            </div>
+                        </button>
+                    </div>
+
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="user_id" widget="many2one_avatar_user"/>
+                        </group>
+                        <group>
+                            <field name="project_id"/>
+                            <field name="tache_id" domain="[('project_id', '=', project_id)]"/>
+                        </group>
+                    </group>
                     <notebook>
                         <page string="Description">
-                            <field name="description"/>
+                            <field name="description"
+                                   placeholder="Décrivez l'objectif du test..."/>
                         </page>
-
                         <page string="Étapes">
                             <field name="step_ids">
                                 <list editable="bottom">
-                                    <field name="sequence"/>
+                                    <field name="sequence" widget="handle"/>
                                     <field name="description"/>
                                     <field name="expected_result"/>
                                 </list>
@@ -66,18 +109,21 @@
                         </page>
                     </notebook>
                 </sheet>
-
                 <chatter/>
             </form>
         </field>
     </record>
 
-    <!-- Action -->
     <record id="action_test_case" model="ir.actions.act_window">
         <field name="name">Cas de Test</field>
         <field name="res_model">test.case</field>
         <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_test_case_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Créez votre premier cas de test !
+            </p>
+        </field>
     </record>
-
 
 </odoo>
