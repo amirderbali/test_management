@@ -1,72 +1,91 @@
-from odoo import models, fields, exceptions
+from odoo import models, fields, exceptions, _
 import requests
 
 class TestRun(models.Model):
     _name = 'test.run'
     _description = 'Test Run'
-
-    name = fields.Char(string="Name", required=True)
     _inherit = ['mail.thread', 'mail.activity.mixin']
         
-    name = fields.Char(string="Nom", required=True)
+    name = fields.Char(string="Nom", required=True, tracking=True)
     description = fields.Text(string="Description")
 
-    
-    test_case_id = fields.Many2one('test.case',string="Cas de test",required=True )
+    # Relation vers le Cas de Test (contient le nom du Job Jenkins)[cite: 1]
+    test_case_id = fields.Many2one('test.case', string="Cas de test", required=True)
 
-    project_id = fields.Many2one(related='test_case_id.project_id',store=True,string="Projet")
+    project_id = fields.Many2one(related='test_case_id.project_id', store=True, string="Projet")
     tache_id = fields.Many2one('project.task', string="Tâche")
 
-    tester_id = fields.Many2one('res.users',string="Testeur",default=lambda self: self.env.user)
-
-    date = fields.Datetime(string="Date d'exécution",default=fields.Datetime.now)
+    tester_id = fields.Many2one('res.users', string="Testeur", default=lambda self: self.env.user)
+    date = fields.Datetime(string="Date d'exécution", default=fields.Datetime.now)
     
+    state = fields.Selection([
+        ('draft', 'Brouillon'),
+        ('running', 'En cours'),
+        ('done', 'Terminé')
+    ], default='draft', tracking=True)
 
-    state = fields.Selection([('draft', 'Brouillon'),('running', 'En cours'),('done', 'Terminé') ], default='draft', tracking=True)
+    result = fields.Selection([
+        ('pass', 'Passé'),
+        ('fail', 'Échoué'),
+        ('blocked', 'Bloqué')
+    ], string="Résultat global", tracking=True)
 
-    result = fields.Selection([ ('pass', 'Passé'), ('fail', 'Échoué'),('blocked', 'Bloqué')], string="Résultat global", tracking=True)
-
-    step_ids = fields.One2many('test.run.step','test_run_id',string="Étapes exécutées")
+    step_ids = fields.One2many('test.run.step', 'test_run_id', string="Étapes exécutées")
     
-    
-    # bouton démarrer
-    #def action_start(self):
-    #    self.state = 'running'
     def action_start(self):
-        # Configuration Jenkins
-        jenkins_url = "http://localhost:8080/job/tester_automate/buildWithParameters"
-        user = "admin"
-        # Ton jeton API que tu viens de générer
-        api_token = "114911bcee26867f8fafe7c6805fd529c0" 
-        # Le jeton de projet défini dans la config du job Jenkins (Build Triggers)
-        token_projet = "SUPER_CLE" 
+        """
+        Lance le job Jenkins en utilisant les paramètres saisis manuellement 
+        dans la configuration et le test case.
+        """
+        # 1. Récupérer la configuration globale active
+        config = self.env['jenkins.config'].get_active_config()
+        
+        user = config.jenkins_user
+        api_token = config.jenkins_token
+        base_url = config.jenkins_url.rstrip('/')
 
         for record in self:
-            # On prépare l'ID pour l'envoyer à Jenkins
+            # 2. Récupérer le nom du job saisi dans le Test Case associé
+            job_name = record.test_case_id.jenkins_job_name
+            
+            if not job_name:
+                raise exceptions.ValidationError(_(
+                    "Le nom du job Jenkins n'est pas saisi dans le Cas de Test associé."
+                ))
+
+            # 3. Construire l'URL dynamiquement avec le nom du job
+            # On utilise /build car le pipeline est géré par le Jenkinsfile
+            jenkins_url = f"{base_url}/job/{job_name}/build"
+            
+            # Paramètres envoyés à Jenkins (optionnel, pour suivi)
             params = {
-                'token': token_projet,
-                'ODOO_ID': str(record.id)
+                'ODOO_TEST_RUN_ID': str(record.id)
             }
             
             try:
-                # Appel à l'API Jenkins avec authentification Basic
-                response = requests.post(jenkins_url, params=params, auth=(user, api_token))
+                # 4. Appel à l'API Jenkins avec authentification Basic
+                response = requests.post(
+                    jenkins_url, 
+                    params=params, 
+                    auth=(user, api_token),
+                    timeout=15
+                )
                 
+                # Codes 200, 201 ou 202 signifient que Jenkins a accepté la demande
                 if response.status_code in [200, 201, 202]:
-                    # On change l'état dans Odoo pour montrer que c'est lancé
                     record.write({'state': 'running'})
+                    record.message_post(body=_(f"Job Jenkins '{job_name}' lancé avec succès."))
                 else:
-                    raise exceptions.ValidationError(f"Erreur Jenkins ({response.status_code}) : {response.text}")
+                    raise exceptions.ValidationError(_(
+                        f"Erreur Jenkins ({response.status_code}) : {response.text}"
+                    ))
             except Exception as e:
-                raise exceptions.ValidationError(f"Connexion Jenkins échouée : {str(e)}")
+                raise exceptions.ValidationError(_(f"Connexion Jenkins échouée : {str(e)}"))
 
-    # bouton terminer
-    # Dans la classe TestRun (test.py)
     def action_done(self):
+        """Bouton terminer : passe à l'état terminé et ferme le test case."""
         for record in self:
             record.write({'state': 'done'})
-            # Ce bloc fait le lien automatique
             if record.test_case_id:
                 record.test_case_id.write({'state': 'done'})
-            return True  
-          
+        return True

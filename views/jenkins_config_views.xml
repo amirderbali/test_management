@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_test_case_form_jenkins_ui" model="ir.ui.view">
+        <field name="name">test.case.form.jenkins.ui</field>
+        <field name="model">test.case</field>
+        <field name="inherit_id" ref="test_management.view_test_case_form"/>
+        <field name="arch" type="xml">
+            
+            <!-- 1. Ajout du bouton principal dans le Header -->
+            <xpath expr="//header" position="inside">
+                <button name="action_launch_jenkins" type="object" 
+                        string="Lancer sur Jenkins" class="btn-jenkins" 
+                        icon="fa-play" invisible="state != 'approved'"/>
+                <button name="action_preview_jenkins_xml" type="object" 
+                        string="Prévisualiser XML" class="btn-outline-secondary"/>
+            </xpath>
+
+            <!-- 2. Organisation de l'UI type "Pipeline Creator" -->
+            <xpath expr="//notebook" position="inside">
+                <page string="Configuration Jenkins" name="jenkins_pipeline">
+                    <group>
+                        <!-- Groupe : Paramètres Jenkins -->
+                        <group string="Paramètres Jenkins" name="jenkins_params">
+                            <field name="jenkins_job_name" required="1"/>
+                            <field name="jenkins_branch"/>
+                            <field name="jenkins_env" widget="radio" options="{'horizontal': true}"/>
+                        </group>
+                        
+                        <!-- Groupe : SCM -->
+                        <group string=" Source Code (SCM)" name="scm_params">
+                            <field name="git_repo_url" widget="url" placeholder="https://github.com/..."/>
+                            <field name="git_credentials_id"/>
+                            <field name="git_scm_branch"/>
+                            <field name="jenkinsfile_path"/>
+                        </group>
+                    </group>
+
+                    <group>
+                        <!-- Groupe : Déclencheurs (Triggers) -->
+                        <group string=" Déclencheurs &amp; Build" name="triggers">
+                            <field name="trigger_webhook" widget="boolean_toggle"/>
+                            <field name="trigger_poll" widget="boolean_toggle"/>
+                            <field name="cron_expression" invisible="not trigger_poll"/>
+                            <hr class="mt-2 mb-2" colspan="2"/>
+                            <field name="discard_old_builds" widget="boolean_toggle"/>
+                            <field name="keep_builds_count" invisible="not discard_old_builds"/>
+                        </group>
+
+                        <!-- Groupe : Résultat & Statut (Le bandeau vert/rouge) -->
+                        <group string="Statut du Job" name="jenkins_status">
+                            <field name="jenkins_job_status" widget="badge" 
+                                   decoration-success="jenkins_job_status == 'created'"
+                                   decoration-danger="jenkins_job_status == 'error'"/>
+                            <field name="jenkins_job_url" widget="url" invisible="not jenkins_job_url"/>
+                            <field name="jenkins_created_date" invisible="not jenkins_created_date"/>
+                            <field name="jenkins_last_error" invisible="not jenkins_last_error" class="text-danger"/>
+                        </group>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

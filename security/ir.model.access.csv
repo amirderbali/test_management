@@ -11,6 +11,8 @@ access_test_case_step_user,test.case.step.user,model_test_case_step,,1,1,1,1
 
 access_test_report_wizard,test.report.wizard,model_test_report_wizard,base.group_user,1,1,1,1
 
+access_jenkins_config_user,jenkins.config,model_jenkins_config,base.group_user,1,1,1,1
+
 
 
 
