@@ -12,7 +12,7 @@ class TestBug (models.Model):
     state = fields.Selection([('new', 'Nouveau'),('confirmed', 'Confirmé'),('in_progress', 'En cours'),('resolved', 'Résolu'),('closed', 'Fermé')
     ], string="Statut", default='new', tracking=True)
 
-    test_run_id = fields.Many2one('test.run',string="Test Run" )
+    test_run_id = fields.Many2one('test.run',string="Test Run", help="Le run à l'origine du bug" )
 
     step_id = fields.Many2one('test.run.step',string="Step du Test" )
 
@@ -38,5 +38,15 @@ class TestBug (models.Model):
     def action_reset(self):
      for rec in self:
         rec.state = 'new'
-    
+    def action_view_test_run(self):
+        """ Ouvre la vue formulaire du Test Run associé """
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Test Run Associé',
+            'res_model': 'test.run',
+            'view_mode': 'form',
+            'res_id': self.test_run_id.id,
+            'target': 'current',
+        }
     

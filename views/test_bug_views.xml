@@ -1,5 +1,4 @@
 <odoo>
-
     <!-- LIST VIEW -->
     <record id="view_test_bug_list" model="ir.ui.view">
         <field name="name">test.bug.list</field>
@@ -8,7 +7,11 @@
             <list default_group_by="test_run_id">
                 <field name="name"/>
                 <field name="severity"/>
-                <field name="state" widget="badge" decoration-success="state == 'resolved'"  decoration-warning="state == 'in_progress'" decoration-danger="state == 'new'" decoration-muted="state == 'closed'"/>
+                <field name="state" widget="badge" 
+                       decoration-success="state == 'resolved'"  
+                       decoration-warning="state == 'in_progress'" 
+                       decoration-danger="state == 'new'" 
+                       decoration-muted="state == 'closed'"/>
                 <field name="tester_id"/>
                 <field name="test_run_id"/>
             </list>
@@ -27,21 +30,35 @@
                     <button name="action_resolve" type="object" string="Résolu" class="btn-success" invisible="state != 'in_progress'"  />
                     <button name="action_close" type="object" string="Fermer" class="btn-secondary" invisible="state != 'resolved'"  />
                     <button name="action_reset" type="object" string="Réinitialiser" class="btn-primary" invisible="state != 'closed'"   />
-                    <field name="state" widget="statusbar"
-                           statusbar_visible="new,confirmed,in_progress,resolved,closed"/>
+                    <field name="state" widget="statusbar" statusbar_visible="new,confirmed,in_progress,resolved,closed"/>
                 </header>
 
                 <sheet>
-                    <group>
-                        <field name="name"/>
-                        <field name="severity"/>
-                        <field name="tester_id"/>
-                        <field name="project_id"/>
-                    </group>
+                    <!-- SMART BUTTON BOX -->
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_test_run"
+                                type="object"
+                                class="oe_stat_button"
+                                icon="fa-flask"
+                                invisible="not test_run_id">
+                            <div class="o_stat_info">
+                                <span class="o_stat_text">Voir le</span>
+                                <span class="o_stat_text">Test Run</span>
+                            </div>
+                        </button>
+                    </div>
 
                     <group>
-                        <field name="test_run_id"/>
-                        <field name="step_id"/>
+                        <group>
+                            <field name="name"/>
+                            <field name="severity"/>
+                            <field name="tester_id"/>
+                            <field name="project_id"/>
+                        </group>
+                        <group>
+                            <field name="test_run_id"/>
+                            <field name="step_id"/>
+                        </group>
                     </group>
 
                     <notebook>
@@ -50,18 +67,10 @@
                         </page>
                     </notebook>
                 </sheet>
-
                 <chatter/>
             </form>
         </field>
     </record>
-    <record id="action_test_bug" model="ir.actions.act_window">
-    <field name="name">Bugs</field>
-    <field name="res_model">test.bug</field>
-    <field name="view_mode">list,form</field>
-    </record>
-
-    
 
     <!-- GRAPH VIEW - Bugs -->
     <record id="view_test_bug_graph" model="ir.ui.view">
@@ -94,7 +103,4 @@
         <field name="res_model">test.bug</field>
         <field name="view_mode">list,form,graph,pivot</field>
     </record>
-
-
-
 </odoo>

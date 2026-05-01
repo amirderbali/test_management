@@ -1,4 +1,5 @@
 from odoo import models, fields, exceptions, _
+from odoo.exceptions import UserError
 import requests
 
 class TestRun(models.Model):
@@ -33,55 +34,33 @@ class TestRun(models.Model):
     step_ids = fields.One2many('test.run.step', 'test_run_id', string="Étapes exécutées")
     
     def action_start(self):
-        """
-        Lance le job Jenkins en utilisant les paramètres saisis manuellement 
-        dans la configuration et le test case.
-        """
-        # 1. Récupérer la configuration globale active
-        config = self.env['jenkins.config'].get_active_config()
-        
-        user = config.jenkins_user
-        api_token = config.jenkins_token
-        base_url = config.jenkins_url.rstrip('/')
+     """
+     Remplace l'ancienne version. 
+     Délègue l'exécution technique au Test Case associé.
+     """
+     self.ensure_one()
+    
+    # 1. Vérification de sécurité
+     if not self.test_case_id:
+      raise UserError(_("Aucun Cas de Test n'est associé à ce run."))
+    
+    # 2. On vérifie si le job est prêt côté Jenkins
+     if self.test_case_id.jenkins_job_status != 'created':
+        raise UserError(_(
+            "Le job Jenkins n'a pas encore été configuré ou créé pour ce cas de test. "
+            "Veuillez cliquer sur 'Créer Job Jenkins' dans le formulaire du Cas de Test."
+        ))
 
-        for record in self:
-            # 2. Récupérer le nom du job saisi dans le Test Case associé
-            job_name = record.test_case_id.jenkins_job_name
-            
-            if not job_name:
-                raise exceptions.ValidationError(_(
-                    "Le nom du job Jenkins n'est pas saisi dans le Cas de Test associé."
-                ))
+    # 3. Appel de la méthode centralisée dans test_case_jenkins.py
+    # On passe l'ID du run actuel pour le suivi
+     self.test_case_id.action_run_jenkins(run_id=self.id)
 
-            # 3. Construire l'URL dynamiquement avec le nom du job
-            # On utilise /build car le pipeline est géré par le Jenkinsfile
-            jenkins_url = f"{base_url}/job/{job_name}/build"
-            
-            # Paramètres envoyés à Jenkins (optionnel, pour suivi)
-            params = {
-                'ODOO_TEST_RUN_ID': str(record.id)
-            }
-            
-            try:
-                # 4. Appel à l'API Jenkins avec authentification Basic
-                response = requests.post(
-                    jenkins_url, 
-                    params=params, 
-                    auth=(user, api_token),
-                    timeout=15
-                )
-                
-                # Codes 200, 201 ou 202 signifient que Jenkins a accepté la demande
-                if response.status_code in [200, 201, 202]:
-                    record.write({'state': 'running'})
-                    record.message_post(body=_(f"Job Jenkins '{job_name}' lancé avec succès."))
-                else:
-                    raise exceptions.ValidationError(_(
-                        f"Erreur Jenkins ({response.status_code}) : {response.text}"
-                    ))
-            except Exception as e:
-                raise exceptions.ValidationError(_(f"Connexion Jenkins échouée : {str(e)}"))
-
+    # 4. Mise à jour de l'état du run local
+     self.write({
+        'state': 'running', # ou 'in_progress' selon votre workflow
+    })
+    
+     return True
     def action_done(self):
         """Bouton terminer : passe à l'état terminé et ferme le test case."""
         for record in self:
@@ -89,3 +68,28 @@ class TestRun(models.Model):
             if record.test_case_id:
                 record.test_case_id.write({'state': 'done'})
         return True
+    def action_auto_resolve_bugs(self, step_description=None):
+     """
+    Appelé par Jenkins via RPC.
+    Cherche les bugs liés à ce Run et les passe en 'Résolu'.
+    """
+     self.ensure_one()
+    
+    # On cherche les bugs liés à ce Run qui ne sont pas fermés
+     domain = [
+        ('test_run_id', '=', self.id),
+        ('state', 'not in', ['resolved', 'closed'])
+     ]
+    
+    # Optionnel : Si Jenkins envoie la description de l'étape, on filtre
+     if step_description:
+        # On cherche le bug dont la description contient le nom de l'étape
+        domain.append(('description', 'ilike', step_description))
+    
+     bugs = self.env['test.bug'].search(domain)
+    
+     if bugs:
+        bugs.write({'state': 'resolved'})
+        for bug in bugs:
+            bug.message_post(body="✅ Résolution automatique : Le test associé est désormais 'Passé' sur Jenkins.")
+     return True
