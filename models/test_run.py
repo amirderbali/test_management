@@ -77,7 +77,7 @@ class TestRun(models.Model):
     
     # On cherche les bugs liés à ce Run qui ne sont pas fermés
      domain = [
-        ('test_run_id', '=', self.id),
+        ('project_id', '=', self.project_id.id),
         ('state', 'not in', ['resolved', 'closed'])
      ]
     
