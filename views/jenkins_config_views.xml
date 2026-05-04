@@ -11,8 +11,6 @@
                 <button name="action_launch_jenkins" type="object" 
                         string="Lancer sur Jenkins" class="btn-jenkins" 
                         icon="fa-play" invisible="state != 'approved'"/>
-                <button name="action_preview_jenkins_xml" type="object" 
-                        string="Prévisualiser XML" class="btn-outline-secondary"/>
             </xpath>
 
             <!-- 2. Organisation de l'UI type "Pipeline Creator" -->
