@@ -8,3 +8,4 @@ from . import test_report_parser
 from . import project_inherit    
 from . import jenkins_config
 from . import test_case_jenkins
+from . import test_dashboard

@@ -61,6 +61,24 @@ class TestCase(models.Model):
             'res_id': self.tache_id.id,
             'target': 'current',
         }
+    @api.model
+    def get_dashboard_stats(self):
+        # Exemple de requêtes ORM pour regrouper tes indicateurs
+        total_cases = self.env['test.case'].search_count([])
+        
+        # Statuts des lancements (à adapter selon tes états réels : 'passed', 'failed', etc.)
+        passed_runs = self.env['test.run'].search_count([('state', '=', 'passed')])
+        failed_runs = self.env['test.run'].search_count([('state', '=', 'failed')])
+        
+        # Nombre d'anomalies/bugs ouverts
+        open_bugs = self.env['bug'].search_count([('state', '!=', 'done')]) 
+
+        return {
+            'total_cases': total_cases,
+            'passed_runs': passed_runs,
+            'failed_runs': failed_runs,
+            'open_bugs': open_bugs,
+        }    
 
 
 class ProjectTaskInherit(models.Model):

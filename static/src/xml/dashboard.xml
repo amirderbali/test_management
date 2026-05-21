@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="test_management_dashboard_template">
+        <div class="o_dashboards p-4 bg-100" style="height: 100%; overflow-y: auto; background-color: #f8f9fa;">
+            
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="text-900 fw-bold m-0" style="color: #4c407a;">Suivi &amp; Performance Qualité (QA)</h2>
+                    <p class="text-muted m-0">Analyse globale, par projet ou par tâche</p>
+                </div>
+                <button class="btn btn-primary shadow-sm" t-on-click="loadDashboardData" style="background-color: #714B67; border: none;">
+                    <i class="fa fa-refresh me-1"/> Actualiser
+                </button>
+            </div>
+
+            <div class="card p-3 mb-4 shadow-sm border-0 bg-white rounded-3">
+                <div class="row g-3 align-items-center">
+                    <div class="col-auto fw-bold text-muted">
+                        <i class="fa fa-filter me-1"/> Périmètre d'affichage :
+                    </div>
+                    <div class="col-12 col-sm-4 col-md-3">
+                        <select class="form-select border-2" t-on-change="onProjectChange" t-model="state.selectedProject">
+                            <option value="">Tous les Projets (Général)</option>
+                            <t t-foreach="state.projects" t-as="project" t-key="project.id">
+                                <option t-att-value="project.id"><t t-esc="project.name"/></option>
+                            </t>
+                        </select>
+                    </div>
+                    <div class="col-12 col-sm-4 col-md-3">
+                        <select class="form-select border-2" t-on-change="onTaskChange" t-model="state.selectedTask">
+                            <option value="">Toutes les Tâches</option>
+                            <t t-foreach="state.tasks" t-as="task" t-key="task.id">
+                                <option t-att-value="task.id"><t t-esc="task.name"/></option>
+                            </t>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-3 mb-4">
+                
+                <div class="col-12 col-md-6 col-lg-4">
+                    <div class="card shadow-sm border-0 h-100 bg-white p-3 rounded-3">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="rounded-circle text-primary bg-light p-3 me-3" style="font-size: 20px;"><i class="fa fa-folder-open"/></div>
+                            <div>
+                                <h6 class="text-uppercase text-muted fw-bold m-0" style="font-size: 11px;">Cas de Test Totaux</h6>
+                                <h2 class="m-0 fw-bold"><t t-esc="state.test_cases.total"/></h2>
+                            </div>
+                        </div>
+                        <div class="d-flex flex-wrap gap-2 pt-2 border-top">
+                            <span class="badge bg-secondary">Draft: <t t-esc="state.test_cases.draft"/></span>
+                            <span class="badge bg-info text-dark">En cours: <t t-esc="state.test_cases.in_progress"/></span>
+                            <span class="badge bg-success">Validés: <t t-esc="state.test_cases.done"/></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-6 col-lg-4">
+                    <div class="card shadow-sm border-0 h-100 bg-white p-3 rounded-3">
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <div class="d-flex align-items-center">
+                                <div class="rounded-circle text-success bg-light p-3 me-3" style="font-size: 20px;"><i class="fa fa-play-circle"/></div>
+                                <div>
+                                    <h6 class="text-uppercase text-muted fw-bold m-0" style="font-size: 11px;">Exécutions (Runs)</h6>
+                                    <h2 class="m-0 fw-bold"><t t-esc="state.test_runs.total"/></h2>
+                                </div>
+                            </div>
+                            <div class="text-end">
+                                <span class="text-muted small fw-bold d-block">PASS RATE</span>
+                                <span class="fs-4 fw-bold text-success"><t t-esc="state.test_runs.pass_rate"/>%</span>
+                            </div>
+                        </div>
+                        <div class="d-flex flex-wrap gap-2 pt-2 border-top">
+                            <span class="badge bg-success">Pass: <t t-esc="state.test_runs.pass"/></span>
+                            <span class="badge bg-danger">Fail: <t t-esc="state.test_runs.fail"/></span>
+                            <span class="badge bg-warning text-dark">Blocked: <t t-esc="state.test_runs.blocked"/></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-6 col-lg-4">
+                    <div class="card shadow-sm border-0 h-100 bg-white p-3 rounded-3">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="rounded-circle text-danger bg-light p-3 me-3" style="font-size: 20px;"><i class="fa fa-bug"/></div>
+                            <div>
+                                <h6 class="text-uppercase text-muted fw-bold m-0" style="font-size: 11px;">Bugs Détectés</h6>
+                                <h2 class="m-0 fw-bold text-danger"><t t-esc="state.bugs.total"/></h2>
+                            </div>
+                        </div>
+                        <div class="d-flex flex-wrap gap-2 pt-2 border-top">
+                            <span class="badge bg-danger">Critique/High: <t t-esc="state.bugs.high"/></span>
+                            <span class="badge bg-warning text-dark">Medium: <t t-esc="state.bugs.medium"/></span>
+                            <span class="badge bg-success">Résolus: <t t-esc="state.bugs.resolved"/></span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="row g-3">
+                <div class="col-12 col-lg-5">
+                    <div class="card shadow-sm border-0 bg-white p-3 rounded-3 h-100">
+                        <h5 class="fw-bold mb-3" style="color: #4c407a;"><i class="fa fa-trophy me-2 text-warning"/>Top 5 Projets Instables (Bugs)</h5>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle m-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Nom du Projet</th>
+                                        <th class="text-end">Nombre de Bugs</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-if="state.top_projects.length == 0">
+                                        <tr>
+                                            <td colspan="2" class="text-center text-muted py-3">Aucun bug répertorié sur les projets.</td>
+                                        </tr>
+                                    </t>
+                                    <t t-foreach="state.top_projects" t-as="proj" t-key="proj.name">
+                                        <tr>
+                                            <td class="fw-bold text-secondary"><t t-esc="proj.name"/></td>
+                                            <td class="text-end"><span class="badge bg-light-danger text-danger fw-bold fs-6 px-3"><t t-esc="proj.count"/></span></td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-lg-7">
+                    <div class="card shadow-sm border-0 bg-white p-3 rounded-3 h-100">
+                        <h5 class="fw-bold mb-2" style="color: #4c407a;"><i class="fa fa-line-chart me-2 text-info"/>Activité des 7 derniers jours</h5>
+                        <p class="text-muted small">Données brutes prêtes pour intégration graphique :</p>
+                        <div class="bg-light p-3 rounded text-monospace small" style="max-height: 150px; overflow-y: auto;">
+                            <t t-foreach="state.runs_by_day" t-as="day" t-key="day.day">
+                                <div> <t t-esc="day.day"/> : <b><t t-esc="day.total"/></b> exécutions totales dont <span class="text-success"><t t-esc="day.passed"/> validées</span></div>
+                            </t>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </t>
+
+</templates>
