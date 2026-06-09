@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
+
 <templates xml:space="preserve">
 
     <t t-name="test_management_dashboard_template">
@@ -6,7 +7,7 @@
             
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <div>
-                    <h2 class="text-900 fw-bold m-0" style="color: #4c407a;">Suivi &amp; Performance Qualité (QA)</h2>
+                    <h2 class="text-900 fw-bold m-0" style="color: #4c407a;">Performance Qualité (QA)</h2>
                     <p class="text-muted m-0">Analyse globale, par projet ou par tâche</p>
                 </div>
                 <button class="btn btn-primary shadow-sm" t-on-click="loadDashboardData" style="background-color: #714B67; border: none;">
@@ -21,7 +22,7 @@
                     </div>
                     <div class="col-12 col-sm-4 col-md-3">
                         <select class="form-select border-2" t-on-change="onProjectChange" t-model="state.selectedProject">
-                            <option value="">Tous les Projets (Général)</option>
+                            <option value="">Tous les projets (Général)</option>
                             <t t-foreach="state.projects" t-as="project" t-key="project.id">
                                 <option t-att-value="project.id"><t t-esc="project.name"/></option>
                             </t>
@@ -29,7 +30,7 @@
                     </div>
                     <div class="col-12 col-sm-4 col-md-3">
                         <select class="form-select border-2" t-on-change="onTaskChange" t-model="state.selectedTask">
-                            <option value="">Toutes les Tâches</option>
+                            <option value="">Toutes les tâches</option>
                             <t t-foreach="state.tasks" t-as="task" t-key="task.id">
                                 <option t-att-value="task.id"><t t-esc="task.name"/></option>
                             </t>
@@ -102,25 +103,38 @@
             <div class="row g-3">
                 <div class="col-12 col-lg-5">
                     <div class="card shadow-sm border-0 bg-white p-3 rounded-3 h-100">
-                        <h5 class="fw-bold mb-3" style="color: #4c407a;"><i class="fa fa-trophy me-2 text-warning"/>Top 5 Projets Instables (Bugs)</h5>
+                        <h5 class="fw-bold mb-3" style="color: #4c407a;">
+                            Top projets instables (Bugs)
+                        </h5>
+
                         <div class="table-responsive">
                             <table class="table table-hover align-middle m-0">
                                 <thead class="table-light">
                                     <tr>
-                                        <th>Nom du Projet</th>
-                                        <th class="text-end">Nombre de Bugs</th>
+                                        <th>Nom du projet</th>
+                                        <th class="text-end">Nombre de bugs</th>
                                     </tr>
                                 </thead>
+
                                 <tbody>
                                     <t t-if="state.top_projects.length == 0">
                                         <tr>
-                                            <td colspan="2" class="text-center text-muted py-3">Aucun bug répertorié sur les projets.</td>
+                                            <td colspan="2" class="text-center text-muted py-3">
+                                                Aucun bug répertorié sur les projets.
+                                            </td>
                                         </tr>
                                     </t>
+
                                     <t t-foreach="state.top_projects" t-as="proj" t-key="proj.name">
-                                        <tr>
-                                            <td class="fw-bold text-secondary"><t t-esc="proj.name"/></td>
-                                            <td class="text-end"><span class="badge bg-light-danger text-danger fw-bold fs-6 px-3"><t t-esc="proj.count"/></span></td>
+                                        <tr class="text-danger fw-bold">
+                                            <td>
+                                                <t t-esc="proj.name"/>
+                                            </td>
+                                            <td class="text-end">
+                                                <span class="badge bg-danger text-white fw-bold fs-6 px-3">
+                                                    <t t-esc="proj.count"/>
+                                                </span>
+                                            </td>
                                         </tr>
                                     </t>
                                 </tbody>
@@ -131,11 +145,22 @@
 
                 <div class="col-12 col-lg-7">
                     <div class="card shadow-sm border-0 bg-white p-3 rounded-3 h-100">
-                        <h5 class="fw-bold mb-2" style="color: #4c407a;"><i class="fa fa-line-chart me-2 text-info"/>Activité des 7 derniers jours</h5>
-                        <p class="text-muted small">Données brutes prêtes pour intégration graphique :</p>
+                        <h5 class="fw-bold mb-2" style="color: #4c407a;">
+                            Activité des 7 derniers jours
+                        </h5>
+
+                        <p class="text-muted small">
+                            Données brutes prêtes pour intégration graphique :
+                        </p>
+
                         <div class="bg-light p-3 rounded text-monospace small" style="max-height: 150px; overflow-y: auto;">
                             <t t-foreach="state.runs_by_day" t-as="day" t-key="day.day">
-                                <div> <t t-esc="day.day"/> : <b><t t-esc="day.total"/></b> exécutions totales dont <span class="text-success"><t t-esc="day.passed"/> validées</span></div>
+                                <div>
+                                    <t t-esc="day.day"/> :
+                                    <b><t t-esc="day.total"/></b>
+                                    exécutions totales dont
+                                    <span class="text-success"><t t-esc="day.passed"/> validées</span>
+                                </div>
                             </t>
                         </div>
                     </div>
