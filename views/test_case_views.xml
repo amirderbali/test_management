@@ -1,39 +1,79 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
+    <!-- Séquence pour la référence du Test Case -->
+    <record id="seq_test_case" model="ir.sequence">
+        <field name="name">Séquence Cas de Test</field>
+        <field name="code">test.case</field>
+        <field name="prefix">CAS-%(year)s-</field>
+        <field name="padding">4</field>
+        <field name="company_id" eval="False"/>
+    </record>
+
+    <!-- ================================================================ -->
+    <!-- VUE SEARCH                                                         -->
+    <!-- ================================================================ -->
     <record id="view_test_case_search" model="ir.ui.view">
         <field name="name">test.case.search</field>
         <field name="model">test.case</field>
         <field name="arch" type="xml">
             <search>
+                <field name="reference"/>
                 <field name="name"/>
                 <field name="project_id"/>
                 <field name="tache_id"/>
                 <field name="user_id"/>
+                <field name="user_story_ids" string="User Story"/>
+                <field name="sprint_id" string="Sprint"/>
                 <separator/>
-                <filter string="Brouillon" name="draft" domain="[('state', '=', 'draft')]"/>
-                <filter string="En cours" name="in_progress" domain="[('state', '=', 'in_progress')]"/>
-                <filter string="Terminé" name="done" domain="[('state', '=', 'done')]"/>
+                <filter string="Brouillon"  name="draft"       domain="[('state', '=', 'draft')]"/>
+                <filter string="En cours"   name="in_progress" domain="[('state', '=', 'in_progress')]"/>
+                <filter string="Terminé"    name="done"        domain="[('state', '=', 'done')]"/>
+                <separator/>
+                <filter string="Tests Fonctionnels"   name="type_functional"  domain="[('test_type', '=', 'functional')]"/>
+                <filter string="Tests de Régression"  name="type_regression"  domain="[('test_type', '=', 'regression')]"/>
+                <separator/>
+                <filter string="Haute Priorité"       name="high_priority"    domain="[('priority', 'in', ['2', '3'])]"/>
+                <separator/>
+                <filter string="Env. Staging"         name="env_staging"      domain="[('environment', '=', 'staging')]"/>
+                <filter string="Env. Production"      name="env_prod"         domain="[('environment', '=', 'prod')]"/>
                 <separator/>
                 <group>
-                    <filter string="Projet" name="group_by_project" context="{'group_by': 'project_id'}"/>
-                    <filter string="Tâche" name="group_by_task" context="{'group_by': 'tache_id'}"/>
-                    <filter string="Responsable" name="group_by_user" context="{'group_by': 'user_id'}"/>
-                    <filter string="État" name="group_by_state" context="{'group_by': 'state'}"/>
+                    <filter string="Projet"       name="group_by_project"  context="{'group_by': 'project_id'}"/>
+                    <filter string="Tâche"        name="group_by_task"     context="{'group_by': 'tache_id'}"/>
+                    <filter string="Sprint"       name="group_by_sprint"   context="{'group_by': 'sprint_id'}"/>
+                    <filter string="Responsable"  name="group_by_user"     context="{'group_by': 'user_id'}"/>
+                    <filter string="État"         name="group_by_state"    context="{'group_by': 'state'}"/>
+                    <filter string="Niveau"       name="group_by_level"    context="{'group_by': 'level'}"/>
+                    <filter string="Type"         name="group_by_type"     context="{'group_by': 'test_type'}"/>
+                    <filter string="Environnement" name="group_by_env"     context="{'group_by': 'environment'}"/>
                 </group>
             </search>
         </field>
     </record>
 
+    <!-- ================================================================ -->
+    <!-- VUE LIST (TREE)                                                    -->
+    <!-- ================================================================ -->
     <record id="view_test_case_tree" model="ir.ui.view">
         <field name="name">test.case.tree</field>
         <field name="model">test.case</field>
         <field name="arch" type="xml">
             <list>
+                <field name="sequence"    widget="handle"/>
+                <field name="reference"/>
+                <field name="priority"    widget="priority"              optional="show"/>
                 <field name="name"/>
                 <field name="project_id"/>
-                <field name="tache_id"/>
-                <field name="user_id"/>
+               
+                <field name="execution_mode"  widget="badge"   decoration-info="execution_mode == 'Manuel' " decoration-success="execution_mode == 'Automatique'" />
+                <field name="level"                                      optional="show"/>
+                <field name="test_type"                                  optional="show"/>
+                <field name="user_id"     widget="many2one_avatar_user"/>
+                <field name="reviewer_id" widget="many2one_avatar_user"  optional="hide"/>
+                <field name="due_date"                                   optional="hide"/>
+                <field name="step_count"                                 optional="hide"/>
+            
                 <field name="state" widget="badge"
                        decoration-info="state == 'draft'"
                        decoration-warning="state == 'in_progress'"
@@ -42,11 +82,15 @@
         </field>
     </record>
 
+    <!-- ================================================================ -->
+    <!-- VUE FORM                                                           -->
+    <!-- ================================================================ -->
     <record id="view_test_case_form" model="ir.ui.view">
         <field name="name">test.case.form</field>
         <field name="model">test.case</field>
         <field name="arch" type="xml">
             <form>
+                <!-- BARRE D'ACTIONS -->
                 <header>
                     <button name="action_approve" type="object" string="Approuver"
                             class="btn-primary" invisible="state != 'draft'"/>
@@ -59,23 +103,41 @@
                     <field name="state" widget="statusbar"
                            statusbar_visible="draft,approved,in_progress,done"/>
                 </header>
-                <sheet>
 
-                    <!-- ✅ BOUTONS DE NAVIGATION -->
+                <sheet>
+                    <!-- BOUTONS DE NAVIGATION (SMART BUTTONS) -->
                     <div class="oe_button_box" name="button_box">
-                        <button name="action_open_project"
-                                type="object"
-                                class="oe_stat_button"
-                                icon="fa-folder-open"
+                        <button name="action_open_runs" type="object"
+                                class="oe_stat_button" icon="fa-play-circle">
+                            <div class="o_stat_info">
+                                <field name="run_count" class="o_stat_value"/>
+                                <span class="o_stat_text">Exécutions</span>
+                            </div>
+                        </button>
+                        <button name="action_open_bugs" type="object"
+                                class="oe_stat_button" icon="fa-bug">
+                            <div class="o_stat_info">
+                                <field name="bug_count" class="o_stat_value"/>
+                                <span class="o_stat_text">Bugs</span>
+                            </div>
+                        </button>
+                        <button name="action_open_user_stories" type="object"
+                                class="oe_stat_button" icon="fa-book"
+                                invisible="user_story_count == 0">
+                            <div class="o_stat_info">
+                                <field name="user_story_count" class="o_stat_value"/>
+                                <span class="o_stat_text">User Stories</span>
+                            </div>
+                        </button>
+                        <button name="action_open_project" type="object"
+                                class="oe_stat_button" icon="fa-folder-open"
                                 invisible="not project_id">
                             <div class="o_stat_info">
                                 <span class="o_stat_text">Projet</span>
                             </div>
                         </button>
-                        <button name="action_open_task"
-                                type="object"
-                                class="oe_stat_button"
-                                icon="fa-tasks"
+                        <button name="action_open_task" type="object"
+                                class="oe_stat_button" icon="fa-tasks"
                                 invisible="not tache_id">
                             <div class="o_stat_info">
                                 <span class="o_stat_text">Tâche</span>
@@ -83,22 +145,58 @@
                         </button>
                     </div>
 
+                    <!-- TITRE ET RÉFÉRENCE -->
+                    <div class="oe_title">
+                        <h1>
+                            <field name="reference" invisible="reference == 'Nouveau'"/>
+                        </h1>
+                        <div class="d-flex align-items-center">
+                            <field name="priority" widget="priority" class="mr-3"/>
+                            <h2 class="ml-2 w-100">
+                                <field name="name" placeholder="Titre du cas de test..."/>
+                            </h2>
+                        </div>
+                    </div>
+
+                    <!-- GROUPE PRINCIPAL -->
                     <group>
-                        <group>
-                            <field name="name"/>
-                            <field name="user_id" widget="many2one_avatar_user"/>
+                        <group string="Classification">
+                         <!-- Nouveau champ ajouté ici -->
+                        <field name="execution_mode" widget="radio" options="{'horizontal': true}"/>
+    
+                        <field name="level"/>
+                        <field name="test_type"/>
+                        <field name="duration_estimated" widget="float_time"/>
                         </group>
-                        <group>
+                        <!-- Colonne gauche : identification -->
+                        <group string="Identification">
                             <field name="project_id"/>
-                            <field name="tache_id" domain="[('project_id', '=', project_id)]"/>
+                            <field name="tache_id"
+                                   domain="[('project_id', '=', project_id)]"/>
+                            <field name="user_id"
+                                   widget="many2one_avatar_user"/>
+                            <field name="reviewer_id"
+                                   widget="many2one_avatar_user"/>
+                            <field name="due_date"/>
                         </group>
+                        <!-- Colonne droite : classification -->
+                        
                     </group>
+
+                    <!-- ONGLETS -->
                     <notebook>
-                        <page string="Description">
+
+                        <!-- Onglet 1 : Description -->
+                        <page string="Description" name="description">
                             <field name="description"
                                    placeholder="Décrivez l'objectif du test..."/>
                         </page>
-                        <page string="Étapes">
+
+                    
+
+
+                        <!-- Onglet 4 : Étapes -->
+                        <page string="Étapes" name="steps">
                             <field name="step_ids">
                                 <list editable="bottom">
                                     <field name="sequence" widget="handle"/>
@@ -107,6 +205,26 @@
                                 </list>
                             </field>
                         </page>
+
+                        <!-- Onglet 5 : Résultats -->
+                        <page string="Résultats" name="results">
+                            <group>
+                                <group string="Attendu">
+                                    <field name="expected_result_global"
+                                           nolabel="1"
+                                           placeholder="Critère de succès global du test..."/>
+                                </group>
+                                <group string="Obtenu (dernière exécution)">
+                                    <field name="obtained_result"
+                                           nolabel="1"
+                                           placeholder="Résultat constaté lors de la dernière exécution..."/>
+                                    <field name="last_run_status" readonly="1"/>
+                                </group>
+                            </group>
+                        </page>
+
+        
+
                     </notebook>
                 </sheet>
                 <chatter/>
@@ -114,6 +232,9 @@
         </field>
     </record>
 
+    <!-- ================================================================ -->
+    <!-- ACTION                                                             -->
+    <!-- ================================================================ -->
     <record id="action_test_case" model="ir.actions.act_window">
         <field name="name">Cas de Test</field>
         <field name="res_model">test.case</field>

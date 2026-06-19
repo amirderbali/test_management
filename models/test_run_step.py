@@ -3,8 +3,10 @@ from odoo import models, fields, api
 class TestRunStep(models.Model):
     _name = 'test.run.step'
     _description = 'Test Run Step'
+    _order = 'sequence'
 
     test_run_id = fields.Many2one('test.run', string="Test Run", ondelete='cascade')
+    sequence = fields.Integer(string="Ordre", default=1) 
     description = fields.Text(string="Description")
     expected_result = fields.Text(string="Résultat attendu")
     actual_result = fields.Text(string="Résultat réel")

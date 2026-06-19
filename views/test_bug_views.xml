@@ -1,69 +1,167 @@
+<?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- LIST VIEW -->
-    <record id="view_test_bug_list" model="ir.ui.view">
-        <field name="name">test.bug.list</field>
+
+    <!-- 1. SEQUENCE AUTOMATIQUE DU BUG -->
+    <record id="seq_test_bug" model="ir.sequence">
+        <field name="name">Séquence Bug</field>
+        <field name="code">test.bug</field>
+        <field name="prefix">BUG-%(year)s-</field>
+        <field name="padding">5</field>
+        <field name="company_id" eval="False"/>
+    </record>
+
+    <!-- 2. VUE SEARCH -->
+    <record id="view_test_bug_search" model="ir.ui.view">
+        <field name="name">test.bug.search</field>
         <field name="model">test.bug</field>
         <field name="arch" type="xml">
-            <list default_group_by="test_run_id">
+            <search>
+                <field name="reference"/>
                 <field name="name"/>
-                <field name="severity"/>
-                <field name="state" widget="badge" 
-                       decoration-success="state == 'resolved'"  
-                       decoration-warning="state == 'in_progress'" 
-                       decoration-danger="state == 'new'" 
-                       decoration-muted="state == 'closed'"/>
+                <field name="test_case_id"/>
+                <field name="assignee_id"/>
                 <field name="tester_id"/>
-                <field name="test_run_id"/>
+                <field name="project_id"/>
+                
+                
+                <separator/>
+                <filter string="Mes Bugs (Développeur)" name="my_bugs" domain="[('assignee_id', '=', uid)]"/>
+                <filter string="Signalés par moi (QA)" name="reported_by_me" domain="[('tester_id', '=', uid)]"/>
+                <separator/>
+                <filter string="Bugs Ouverts" name="open_bugs" domain="[('state', 'not in', ['resolved', 'closed'])]"/>
+                <filter string="À Re-tester" name="to_retest" domain="[('state', '=', 'resolved')]"/>
+                <separator/>
+                <filter string="Haute Priorité (Business)" name="high_priority" domain="[('priority', 'in', ['2', '3'])]"/>
+                <filter string="Critiques (Technique)" name="high_severity" domain="[('severity', '=', 'high')]"/>
+                
+                <group>
+                    <filter string="Projet" name="group_by_project" context="{'group_by': 'project_id'}"/>
+                    <filter string="Cas de Test" name="group_by_test_case" context="{'group_by': 'test_case_id'}"/>
+                    <filter string="Assigné à" name="group_by_assignee" context="{'group_by': 'assignee_id'}"/>
+                    <filter string="Statut" name="group_by_state" context="{'group_by': 'state'}"/>
+                    <filter string="Sévérité" name="group_by_severity" context="{'group_by': 'severity'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- 3. VUE LIST (TREE) -->
+    <record id="view_test_bug_tree" model="ir.ui.view">
+        <field name="name">test.bug.tree</field>
+        <field name="model">test.bug</field>
+        <field name="arch" type="xml">
+            <list decoration-danger="severity == 'high' and state not in ['resolved', 'closed']" 
+                  decoration-success="state == 'closed'" 
+                  decoration-muted="state == 'resolved'">
+                
+                <field name="reference"/>
+                <field name="priority" widget="priority" optional="show"/>
+                <field name="name"/>
+                <field name="test_case_id" optional="show"/>
+                <field name="project_id" optional="show"/>
+                
+                <field name="severity" widget="badge" 
+                       decoration-danger="severity == 'high'" 
+                       decoration-warning="severity == 'medium'" 
+                       decoration-info="severity == 'low'"/>
+                
+                <field name="assignee_id" widget="many2one_avatar_user"/>
+                <field name="time_to_resolve" widget="float_time" optional="hide"/>
+                
+                <field name="last_retest_status" widget="badge" 
+                       decoration-success="last_retest_status == 'passed'" 
+                       decoration-danger="last_retest_status == 'failed'"
+                       optional="show"/>
+                
+                <field name="state" widget="badge"
+                       decoration-info="state == 'new'"
+                       decoration-warning="state == 'in_progress'"
+                       decoration-success="state in ['resolved', 'closed']"/>
             </list>
         </field>
     </record>
 
-    <!-- FORM VIEW -->
+    <!-- 4. VUE FORM -->
     <record id="view_test_bug_form" model="ir.ui.view">
         <field name="name">test.bug.form</field>
         <field name="model">test.bug</field>
         <field name="arch" type="xml">
             <form>
                 <header>
-                    <button name="action_confirm" type="object" string="Confirmer" class="btn-primary" invisible="state != 'new'" />
-                    <button name="action_start" type="object" string="En cours" class="btn-primary" invisible="state != 'confirmed'" />
-                    <button name="action_resolve" type="object" string="Résolu" class="btn-success" invisible="state != 'in_progress'"  />
-                    <button name="action_close" type="object" string="Fermer" class="btn-secondary" invisible="state != 'resolved'"  />
-                    <button name="action_reset" type="object" string="Réinitialiser" class="btn-primary" invisible="state != 'closed'"   />
+                    <button name="action_confirm" type="object" string="Confirmer" class="btn-primary" invisible="state != 'new'"/>
+                    <button name="action_start" type="object" string="En cours" class="btn-primary" invisible="state != 'confirmed'"/>
+                    <button name="action_resolve" type="object" string="Marquer Résolu" class="btn-success" invisible="state != 'in_progress'"/>
+                    <button name="action_close" type="object" string="Fermer" class="btn-success" invisible="state != 'resolved'"/>
+                    <button name="action_reset" type="object" string="Réinitialiser" class="btn-secondary" invisible="state == 'new'"/>
                     <field name="state" widget="statusbar" statusbar_visible="new,confirmed,in_progress,resolved,closed"/>
                 </header>
-
                 <sheet>
-                    <!-- SMART BUTTON BOX -->
                     <div class="oe_button_box" name="button_box">
-                        <button name="action_view_test_run"
-                                type="object"
-                                class="oe_stat_button"
-                                icon="fa-flask"
-                                invisible="not test_run_id">
+                        <button name="action_view_test_run" type="object" class="oe_stat_button" icon="fa-play-circle" invisible="not test_run_id">
                             <div class="o_stat_info">
-                                <span class="o_stat_text">Voir le</span>
                                 <span class="o_stat_text">Test Run</span>
                             </div>
                         </button>
                     </div>
+                    
+                    <div class="oe_title">
+                        <h1>
+                            <field name="reference" invisible="reference == 'Nouveau'"/>
+                        </h1>
+                        <div class="d-flex align-items-center">
+                            <field name="priority" widget="priority" class="mr-3"/>
+                            <h2 class="ml-2 w-100">
+                                <field name="name" placeholder="Titre du bug "/>
+                            </h2>
+                        </div>
+                    </div>
 
                     <group>
-                        <group>
-                            <field name="name"/>
-                            <field name="severity"/>
-                            <field name="tester_id"/>
-                            <field name="project_id"/>
-                        </group>
-                        <group>
+                        <group string="Traçabilité ">
                             <field name="test_run_id"/>
-                            <field name="step_id"/>
+                            <field name="test_case_id"/>
+                            <field name="project_id"/>
+                            
+                        </group>
+                        <group string="Classification">
+                            <field name="severity"/>
+                            <field name="tester_id" widget="many2one_avatar_user"/>
+                            <field name="assignee_id" widget="many2one_avatar_user"/>
+                            <field name="date_reported"/>
+                            <field name="date_resolved" invisible="not date_resolved"/>
+                            <field name="date_closed" invisible="not date_closed"/>
+                            <field name="time_to_resolve" widget="float_time" invisible="not date_resolved"/>
                         </group>
                     </group>
 
                     <notebook>
                         <page string="Description">
-                            <field name="description"/>
+                            <field name="description" placeholder="Étapes pour reproduire le bug..."/>
+                        </page>
+                        <page string="Résolution" invisible="state in ['new', 'confirmed', 'in_progress']">
+                            <group>
+                                <field name="resolution_note" placeholder="Comment ce bug a-t-il été résolu (PR, Explications) ?"/>
+                            </group>
+                        </page>
+                        <page string="Re-tests QA" invisible="state not in ['resolved', 'closed']">
+                            <group>
+                                <group>
+                                    <field name="retest_count"/>
+                                    <field name="last_retest_status" 
+                                           decoration-success="last_retest_status == 'passed'" 
+                                           decoration-danger="last_retest_status == 'failed'"/>
+                                </group>
+                            </group>
+                            <field name="retest_run_ids" readonly="1">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="create_date"/>
+                                    <field name="tester_id"/>
+                                    <field name="state" widget="badge" 
+                                           decoration-success="state == 'passed'" 
+                                           decoration-danger="state == 'failed'"/>
+                                </list>
+                            </field>
                         </page>
                     </notebook>
                 </sheet>
@@ -72,35 +170,17 @@
         </field>
     </record>
 
-    <!-- GRAPH VIEW - Bugs -->
-    <record id="view_test_bug_graph" model="ir.ui.view">
-        <field name="name">test.bug.graph</field>
-        <field name="model">test.bug</field>
-        <field name="arch" type="xml">
-            <graph string="Statistiques Bugs" type="bar">
-                <field name="state" type="row"/>
-                <field name="severity" type="col"/>
-            </graph>
-        </field>
-    </record>
-
-    <!-- PIVOT VIEW - Bugs -->
-    <record id="view_test_bug_pivot" model="ir.ui.view">
-        <field name="name">test.bug.pivot</field>
-        <field name="model">test.bug</field>
-        <field name="arch" type="xml">
-            <pivot string="Analyse Bugs">
-                <field name="project_id" type="row"/>
-                <field name="state" type="col"/>
-                <field name="severity" type="col"/>
-            </pivot>
-        </field>
-    </record>
-
-    <!-- ACTION - Bugs -->
+    <!-- 5. ACTION -->
     <record id="action_test_bug" model="ir.actions.act_window">
-        <field name="name">Bugs</field>
+        <field name="name">Bugs &amp; Anomalies</field>
         <field name="res_model">test.bug</field>
-        <field name="view_mode">list,form,graph,pivot</field>
+        <field name="view_mode">list,form</field> <!-- Remplacement de tree par list -->
+        <field name="search_view_id" ref="view_test_bug_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Signalez votre première anomalie !
+            </p>
+        </field>
     </record>
+
 </odoo>

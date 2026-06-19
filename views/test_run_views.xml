@@ -1,16 +1,26 @@
 <odoo>
 
-    <!-- TREE -->
+    <!-- LIST -->
     <record id="view_test_run_tree" model="ir.ui.view">
         <field name="name">test.run.list</field>
         <field name="model">test.run</field>
         <field name="arch" type="xml">
-            <list default_group_by="test_case_id">
+            <list default_group_by="project_id"
+                  decoration-success="result == 'pass'"
+                  decoration-danger="result == 'fail'"
+                  decoration-warning="result == 'blocked'">
                 <field name="name"/>
                 <field name="test_case_id"/>
-                <field name="tester_id"/>
-                <field name="state"/>
-                <field name="result"/>
+                <field name="execution_mode"/>
+                <field name="tester_id" widget="many2one_avatar_user"/>
+                <field name="date"/>
+                <field name="state" widget="badge"
+                       decoration-warning="state == 'running'"
+                       decoration-success="state == 'done'"/>
+                <field name="result" widget="badge"
+                       decoration-success="result == 'pass'"
+                       decoration-danger="result == 'fail'"
+                       decoration-warning="result == 'blocked'"/>
                 <field name="project_id"/>
             </list>
         </field>
@@ -23,45 +33,159 @@
         <field name="arch" type="xml">
             <form>
                 <header>
-                    <button name="action_start" string="Démarrer" type="object" invisible="state != 'draft'"/>
-                    <button name="action_done" string="Terminer" type="object" invisible="state != 'running'"/>
-                    <field name="state" widget="statusbar"/>
+                    <button name="action_start" string="Démarrer" type="object"
+                            class="btn-primary" invisible="state != 'draft'"/>
+                    <button name="action_done" string="Terminer" type="object"
+                            class="btn-primary" invisible="state != 'running'"/>
+                    <button name="action_compute_result" string="Recalculer résultat"
+                            type="object" invisible="state != 'done'"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,running,done"/>
                 </header>
 
                 <sheet>
-                    <group>
-                        <field name="name"/>
-                        <field name="test_case_id"/>
-                        <field name="tester_id"/>
-                        <field name="date"/>
-                        <field name="result"/>
-                    </group>
+                    <!-- ✅ role="alert" ajouté pour corriger les warnings Odoo 19 -->
+                    <div class="alert alert-success mb-2" role="alert"
+                         invisible="result != 'pass'">
+                        <strong>Résultat : Passé</strong>
+                    </div>
+                    <div class="alert alert-danger mb-2" role="alert"
+                         invisible="result != 'fail'">
+                        <strong>Résultat : Échoué</strong>
+                    </div>
+                    <div class="alert alert-warning mb-2" role="alert"
+                         invisible="result != 'blocked'">
+                        <strong>Résultat : Bloqué</strong>
+                    </div>
+
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name" placeholder="Nom du run…"/></h1>
+                        <field name="execution_mode" readonly="1"/>
+                    </div>
 
                     <notebook>
-                        <page string="Étapes">
+
+                        <page string="Informations générales" name="general">
+                            <group>
+                                <group string="Identification">
+                                    <field name="test_case_id"/>
+                                    <field name="execution_mode" readonly="1"/>
+                                    <field name="project_id" readonly="1"/>
+                                </group>
+                                <group string="Exécution">
+                                    <field name="tester_id" widget="many2one_avatar_user"/>
+                                    <field name="date"/>
+                                    <field name="result" invisible="state == 'draft'"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <page string="Configuration Jenkins" name="jenkins"
+                              invisible="execution_mode != 'auto'">
+                            <group>
+                                <group string="Build">
+                                    <field name="jenkins_build_number" readonly="1"/>
+                                    <field name="jenkins_build_url" widget="url" readonly="1"/>
+                                    <field name="jenkins_build_status" readonly="1"/>
+                                </group>
+                            </group>
+                            <group string="Logs">
+                                <field name="jenkins_log" widget="text" readonly="1"
+                                       nolabel="1"
+                                       placeholder="Les logs s'afficheront ici après exécution…"/>
+                            </group>
+                        </page>
+
+                        <page string="Saisie manuelle" name="manual"
+                              invisible="execution_mode != 'manual'">
+                            <group>
+                                <group string="Contexte">
+                                    <field name="environment"
+                                           placeholder="ex: Production, Staging…"/>
+                                    <field name="browser"
+                                           placeholder="ex: Chrome 124, iOS…"/>
+                                </group>
+                               
+                            </group>
+                            
+                        </page>
+
+                        <page string="Étapes" name="steps">
                             <field name="step_ids">
-                                <list editable="bottom">
+                                <list editable="bottom"
+                                      decoration-success="state == 'pass'"
+                                      decoration-danger="state == 'fail'"
+                                      decoration-warning="state == 'blocked'">
+                                    <field name="sequence" widget="handle"/>
                                     <field name="description"/>
                                     <field name="expected_result"/>
                                     <field name="actual_result"/>
-                                    <field name="state"/>
+                                    <field name="state" widget="badge"
+                                           decoration-success="state == 'pass'"
+                                           decoration-danger="state == 'fail'"
+                                           decoration-warning="state == 'blocked'"/>
                                     <field name="bug_id"/>
-
                                 </list>
                             </field>
                         </page>
+
                     </notebook>
                 </sheet>
+                <chatter/>
             </form>
         </field>
     </record>
 
+    <!-- SEARCH -->
+    <record id="view_test_run_search" model="ir.ui.view">
+        <field name="name">test.run.search</field>
+        <field name="model">test.run</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="test_case_id"/>
+                <field name="project_id"/>
+                <field name="tester_id"/>
+                <separator/>
+                <filter string="Brouillon"   name="draft"
+                        domain="[('state','=','draft')]"/>
+                <filter string="En cours"    name="running"
+                        domain="[('state','=','running')]"/>
+                <filter string="Terminé"     name="done"
+                        domain="[('state','=','done')]"/>
+                <separator/>
+                <filter string="Passé"       name="pass"
+                        domain="[('result','=','pass')]"/>
+                <filter string="Échoué"      name="fail"
+                        domain="[('result','=','fail')]"/>
+                <separator/>
+                <filter string="Automatique" name="auto"
+                        domain="[('execution_mode','=','auto')]"/>
+                <filter string="Manuel"      name="manual"
+                        domain="[('execution_mode','=','manual')]"/>
+                <separator/>
+                <!-- ✅ group sans attribut string en Odoo 17+ -->
+                <group>
+                    <filter string="Projet"           name="group_project"
+                            context="{'group_by':'project_id'}"/>
+                    <filter string="Mode d'exécution" name="group_mode"
+                            context="{'group_by':'execution_mode'}"/>
+                    <filter string="Résultat"         name="group_result"
+                            context="{'group_by':'result'}"/>
+                    <filter string="Testeur"          name="group_tester"
+                            context="{'group_by':'tester_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
 
-    <!-- Action pour ouvrir Test Run -->
+    <!-- ACTION -->
     <record id="action_test_run" model="ir.actions.act_window">
         <field name="name">Test Run</field>
         <field name="res_model">test.run</field>
         <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_test_run_search"/>
     </record>
 
 </odoo>

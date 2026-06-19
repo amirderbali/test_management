@@ -7,21 +7,24 @@
         <field name="arch" type="xml">
             
             <!-- 1. Ajout du bouton principal dans le Header -->
-            <xpath expr="//header" position="inside">
+            <xpath expr="//header/button[last()]" position="after">
                 <button name="action_launch_jenkins" type="object" 
                         string="Lancer sur Jenkins" class="btn-jenkins" 
-                        icon="fa-play" invisible="state != 'approved'"/>
+                        icon="fa-cogs"
+                        invisible="execution_mode != 'auto' or state != 'approved'"/>
+
             </xpath>
 
             <!-- 2. Organisation de l'UI type "Pipeline Creator" -->
             <xpath expr="//notebook" position="inside">
-                <page string="Configuration Jenkins" name="jenkins_pipeline">
+                <page string="Configuration Jenkins" name="jenkins_pipeline" invisible="execution_mode != 'auto'">
                     <group>
                         <!-- Groupe : Paramètres Jenkins -->
                         <group string="Paramètres Jenkins" name="jenkins_params">
                             <field name="jenkins_job_name" required="1"/>
                             <field name="jenkins_branch"/>
                             <field name="jenkins_env" widget="radio" options="{'horizontal': true}"/>
+                            <field name="test_func" placeholder="ex: test_addition" invisible="level != 'unit'"/>
                         </group>
                         
                         <!-- Groupe : SCM -->

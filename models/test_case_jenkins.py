@@ -191,6 +191,7 @@ class TestCaseJenkins(models.Model):
         ('integration', 'Integration'),
 
     ], string="Environnement (ENV)", default='staging', tracking=True)
+    test_func = fields.Char(string="Fonction cible à tester", help="Nom exact de la fonction pytest. Ex: test_addition", tracking=True,)
 
 
 
@@ -478,7 +479,7 @@ class TestCaseJenkins(models.Model):
 
                 build_url,
 
-                params={'ODOO_TEST_RUN_ID': str(run_id)},
+                params={'ODOO_TEST_RUN_ID': str(run_id),'TEST_FUNC': self.test_func or '',},
 
                 auth=auth,
 
@@ -560,3 +561,4 @@ class TestCaseJenkins(models.Model):
 
         } 
 
+    
